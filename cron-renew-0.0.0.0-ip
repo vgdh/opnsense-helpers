@@ -1,0 +1,48 @@
+#!/bin/sh
+
+# This script creates a CRON action that allows you to renew the IP for any interface that has a 0.0.0.0 IP address
+# You have to create a separate CRON job for every interface you need to monitor and renew. 
+# Interface name must be set in the parameters of the CRON job.
+
+
+# Create OPNsense action config
+cat > /usr/local/opnsense/service/conf/actions.d/actions_renew_ip.conf << 'EOF'
+[renew_wan_ip]
+command: /usr/local/renew_ip.sh
+parameters:%s
+type:script
+message:Check interface (in parameters) for 0.0.0.0 ip and renew IP
+description:Check interface (in parameters) for 0.0.0.0 ip and renew IP
+EOF
+
+# Create renewal script
+cat > /usr/local/renew_ip.sh << 'EOF'
+
+# Check if interface name was passed
+if [ -z "$1" ]; then
+    echo "Usage: $0 <interface>"
+    exit 1
+fi
+
+INTERFACE="$1"# interface for monitoring
+
+# Check if the interface has an IP address of 0.0.0.0
+if ifconfig "$INTERFACE" | grep -q "inet 0.0.0.0"; then
+    echo "Bringing down the interface $INTERFACE..."
+    ifconfig "$INTERFACE" down
+
+    echo "Bringing up the interface $INTERFACE..."
+    ifconfig "$INTERFACE" up
+
+    echo "Sleeping for 5 seconds to allow the interface to initialize..."
+    sleep 5
+
+    echo "Requesting a DHCP lease for the interface $INTERFACE..."
+    dhclient "$INTERFACE"
+fi
+EOF
+
+# Make the renewal script executable
+chmod +x /usr/local/renew_ip.sh
+
+echo "Files created and permissions set."
