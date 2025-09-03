@@ -17,6 +17,7 @@ EOF
 
 # Create renewal script
 cat > /usr/local/renew_ip.sh << 'EOF'
+#!/bin/sh
 
 # Check if interface name was passed
 if [ -z "$1" ]; then
