@@ -7,7 +7,7 @@
 
 # Create OPNsense action config
 cat > /usr/local/opnsense/service/conf/actions.d/actions_renew_ip.conf << 'EOF'
-[renew_wan_ip]
+[renew_ip]
 command: /usr/local/renew_ip.sh
 parameters:%s
 type:script
